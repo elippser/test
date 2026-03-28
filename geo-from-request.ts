@@ -16,11 +16,8 @@ export type GeoFromIp = {
   city: string | null;
   latitude: number | null;
   longitude: number | null;
-  /** Origen principal del resultado fusionado. */
   source: string;
-  /** Todas las lecturas usadas (personal / depuración). */
   readings: GeoReading[];
-  /** Zona horaria del navegador, si la envías en X-Client-Timezone. */
   clientTimezone: string | null;
 };
 
@@ -79,7 +76,6 @@ function median(nums: number[]): number | null {
   return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
 }
 
-/** Peso para fusionar coordenadas: edge suele ser fiable en hosting gestionado. */
 const PROVIDER_COORD_WEIGHT: Record<string, number> = {
   "vercel-edge": 2.5,
   cloudflare: 0,
@@ -99,7 +95,8 @@ function weightedLatLon(readings: GeoReading[], countryMode: string | null) {
         !r.country ||
         r.country.toUpperCase() === countryMode),
   );
-  if (!withCoords.length) return { latitude: null as number | null, longitude: null as number | null };
+  if (!withCoords.length)
+    return { latitude: null as number | null, longitude: null as number | null };
 
   let wSum = 0;
   let latSum = 0;
@@ -122,7 +119,6 @@ function weightedLatLon(readings: GeoReading[], countryMode: string | null) {
   const medLat = median(lats);
   const medLon = median(lons);
 
-  // Promedio entre mediana (robusto) y media ponderada (aprovecha edge).
   const latitude =
     wLat != null && medLat != null ? (wLat + medLat) / 2 : wLat ?? medLat;
   const longitude =
@@ -225,7 +221,6 @@ async function fetchIpapi(ip: string): Promise<GeoReading | null> {
     if (!res.ok) return null;
     const j = (await res.json()) as {
       error?: boolean;
-      reason?: string;
       country_code?: string;
       region?: string;
       city?: string;
@@ -326,10 +321,6 @@ async function collectIpReadings(ip: string): Promise<GeoReading[]> {
   return out;
 }
 
-/**
- * Ubicación aproximada sin permiso del navegador: edge (Vercel/Cloudflare) + varias GeoIP en paralelo,
- * fusionadas (mediana + media ponderada en coordenadas, país por consenso).
- */
 export async function getGeoFromRequest(
   request: NextRequest | Request,
 ): Promise<GeoFromIp> {

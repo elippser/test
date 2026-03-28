@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeoFromRequest } from "@/lib/geo-from-request";
+import { getGeoFromRequest } from "../../../geo-from-request";
 
 export const runtime = "edge";
 
