@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import {
   getGeoFromRequest,
   isSafeHttpRedirectUrl,
-} from "@/lib/geo-from-request";
+} from "./lib/geo-from-request";
 
 /**
  * Redirección por país sin GPS ni diálogos del navegador.
